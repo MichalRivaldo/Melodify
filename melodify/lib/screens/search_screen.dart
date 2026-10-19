@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/player_provider.dart';
 import '../models/song.dart';
 import '../services/song_service.dart';
 import '../widgets/song_tile.dart';
 import 'player_screen.dart';
+import 'profile_screen.dart';
 
 // Halaman Search — mirip Spotify search (redesign)
 class SearchScreen extends StatefulWidget {
@@ -98,38 +100,57 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // Header: avatar + judul "Cari" + ikon kamera
   Widget _buildHeader() {
+    final user = context.watch<AuthProvider>().user;
+    final initial = user?.name.isNotEmpty == true
+        ? user!.name[0].toUpperCase()
+        : 'M';
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 16,
-            backgroundColor: Color(0xFFB388EB),
-            child: Text(
-              'W',
-              style: TextStyle(
-                color: Color(0xFF3B1F6B),
-                fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                );
+              },
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: const Color(0xFF3B82F6),
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Cari',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Cari',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.camera_alt_outlined,
-                color: Colors.white, size: 28),
-          ),
-        ],
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              onPressed: () {},
+              icon: const Icon(Icons.camera_alt_outlined,
+                  color: Colors.white, size: 28),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -137,7 +158,7 @@ class _SearchScreenState extends State<SearchScreen> {
   // Search bar putih
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextField(
         controller: _searchController,
         onChanged: (value) {

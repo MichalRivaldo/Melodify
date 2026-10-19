@@ -129,24 +129,29 @@ class _LibraryScreenState extends State<LibraryScreen> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Your Library',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: SizedBox(
+                height: 48,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Your Library',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: _showCreatePlaylistDialog,
-                    icon: const Icon(Icons.add, color: Colors.white, size: 28),
-                    tooltip: 'Buat playlist',
-                  ),
-                ],
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                      onPressed: _showCreatePlaylistDialog,
+                      icon: const Icon(Icons.add, color: Colors.white, size: 28),
+                      tooltip: 'Buat playlist',
+                    ),
+                  ],
+                ),
               ),
             ),
 

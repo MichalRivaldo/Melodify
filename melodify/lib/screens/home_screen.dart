@@ -5,7 +5,6 @@ import '../providers/auth_provider.dart';
 import '../providers/player_provider.dart';
 import '../models/song.dart';
 import '../services/song_service.dart';
-import 'player_screen.dart';
 import 'profile_screen.dart';
 
 /// jumlah baris per slide dan jumlah slide.
@@ -70,11 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
 
   // ---state tampilan---
-  int _navIndex = 0;
-  int _nowIndex = 0; // lagu aktif di mini player
-  bool _playing = false;
+  int _nowIndex = 0;
 
-  final PageController _miniCtrl = PageController();
   final PageController _listenCtrl = PageController(viewportFraction: 0.94);
 
   @override
@@ -85,7 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _miniCtrl.dispose();
     _listenCtrl.dispose();
     super.dispose();
   }
@@ -118,18 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final i = _safe(index);
     setState(() {
       _nowIndex = i;
-      _playing = true;
     });
-    if (_miniCtrl.hasClients) _miniCtrl.jumpToPage(i);
     context.read<PlayerProvider>().playSong(_songs[i], songList: _songs);
   }
 
-  void _openPlayer() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const PlayerScreen()),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _buildBody(),
         ),
       ),
-      bottomNavigationBar: _buildBottom(),
     );
   }
 
@@ -207,30 +193,42 @@ class _HomeScreenState extends State<HomeScreen> {
         : 'M';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: const Color(0xFF3B82F6),
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                );
+              },
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: const Color(0xFF3B82F6),
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            const Text(
+              'Beranda',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -512,126 +510,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Mini player (geser = lagu berikutnya/sebelumnya) + navbar
-  Widget _buildBottom() {
-    return Container(
-      color: _bg,
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_songs.isNotEmpty)
-              SizedBox(
-                height: 60,
-                child: PageView.builder(
-                  controller: _miniCtrl,
-                  itemCount: _songs.length,
-                  onPageChanged: (i) {
-                    // jumpToPage dari _playSong juga memicu callback ini,
-                    // jadi cek dulu supaya tidak diputar dua kali.
-                    if (i == _nowIndex) return;
-                    _playSong(i);
-                  },
-                  itemBuilder: (_, i) => _miniCard(i),
-                ),
-              ),
-            BottomNavigationBar(
-              backgroundColor: _bg,
-              type: BottomNavigationBarType.fixed,
-              currentIndex: _navIndex,
-              onTap: (i) => setState(() => _navIndex = i),
-              selectedItemColor: Colors.white,
-              unselectedItemColor: _grey,
-              selectedFontSize: 12,
-              unselectedFontSize: 12,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_filled),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.search),
-                  label: 'Cari',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.library_music),
-                  label: 'Library',
-                ),
-                BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Buat'),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _miniCard(int index) {
-    final song = _songs[index];
-    return GestureDetector(
-      onTap: _openPlayer, // ketuk mini player = buka layar pemutar penuh
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Color.lerp(const Color(0xFF2A2A2A), _colorFor(index), 0.45),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: _cover(_colorFor(index), 40, url: song.coverUrl),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    song.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    _artistOf(song),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: _grey, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.speaker_group_outlined,
-              color: Colors.white,
-              size: 24,
-            ),
-            const SizedBox(width: 14),
-            const Icon(Icons.check_circle, color: _green, size: 26),
-            const SizedBox(width: 6),
-            IconButton(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              onPressed: () => setState(() => _playing = !_playing),
-              icon: Icon(
-                _playing ? Icons.pause : Icons.play_arrow,
-                color: Colors.white,
-                size: 32,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // Cover: mengambil gambar dari backend, kalau kosong/gagal pakai placeholder warna
   Widget _cover(Color color, double size, {String? url}) {

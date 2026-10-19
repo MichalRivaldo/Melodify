@@ -56,11 +56,20 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 60),
 
-              // Logo Melodify
-              const Icon(
-                Icons.music_note_rounded,
-                color: Color(0xFF1DB954),
-                size: 80,
+              // Logo Melodify (bisa menggunakan foto/gambar dari assets/images/logo.png)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.music_note_rounded,
+                    color: Color(0xFF1DB954),
+                    size: 80,
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               const Text(

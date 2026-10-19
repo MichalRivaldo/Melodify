@@ -2,6 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/player_provider.dart';
 
+const _palette = [
+  Color(0xFF3F51B5),
+  Color(0xFFC62828),
+  Color(0xFFEF6C00),
+  Color(0xFF6D4C41),
+  Color(0xFF9E9D24),
+  Color(0xFF00897B),
+  Color(0xFF8E24AA),
+  Color(0xFF1E88E5),
+];
+
+Color _colorFor(int i) => _palette[i.abs() % _palette.length];
+
 // Halaman Player — tampilan full-screen saat memutar lagu
 // Mirip dengan Now Playing screen Spotify
 class PlayerScreen extends StatefulWidget {
@@ -32,14 +45,34 @@ class _PlayerScreenState extends State<PlayerScreen> {
         ? player.position.inSeconds / player.duration.inSeconds
         : 0.0;
 
+    final songColor = _colorFor(song.id);
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.lerp(songColor, const Color(0xFF121212), 0.25)!,
+              Color.lerp(songColor, const Color(0xFF121212), 0.65)!,
+              const Color(0xFF121212),
+              const Color(0xFF121212),
+            ],
+            stops: const [0.0, 0.40, 0.75, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
 
               // Header bar (chevron + menu)
               Row(
@@ -113,16 +146,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           ? Image.network(
                               song.coverUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: const Color(0xFF282828),
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                color: songColor.withValues(alpha: 0.5),
                                 child: const Icon(Icons.music_note,
-                                    color: Color(0xFF1DB954), size: 80),
+                                    color: Colors.white, size: 80),
                               ),
                             )
                           : Container(
-                              color: const Color(0xFF282828),
+                              color: songColor.withValues(alpha: 0.5),
                               child: const Icon(Icons.music_note,
-                                  color: Color(0xFF1DB954), size: 80),
+                                  color: Colors.white, size: 80),
                             ),
                     ),
                   ),
@@ -159,16 +192,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   ),
                   IconButton(
                     icon: Icon(
-                      player.isLiked(song.id) ? Icons.favorite : Icons.favorite_border,
+                      player.isLiked(song.id) ? Icons.check_circle : Icons.add_circle_outline,
                       color: player.isLiked(song.id) ? const Color(0xFF1DB954) : Colors.grey,
                       size: 28,
                     ),
                     onPressed: () async {
                       final liked = await player.toggleLike(song.id);
                       if (context.mounted) {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(liked ? 'Ditambahkan ke favorit' : 'Dihapus dari favorit'),
+                            content: Text(liked ? 'Ditambahkan ke Lagu yang Disukai' : 'Dihapus dari Lagu yang Disukai'),
                             backgroundColor: liked ? const Color(0xFF1DB954) : const Color(0xFF282828),
                             duration: const Duration(seconds: 1),
                           ),
@@ -322,8 +356,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // Format Duration → mm:ss
   String _formatDuration(Duration duration) {
@@ -360,33 +395,43 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   ),
                   const SizedBox(height: 16),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.only(left: 20, right: 12),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Antrean Lagu',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Antrean Lagu',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Tahan & geser untuk atur urutan • Geser kiri untuk hapus',
-                              style: TextStyle(
-                                  color: Colors.grey[400], fontSize: 11),
-                            ),
-                          ],
+                              const SizedBox(height: 2),
+                              Text(
+                                'Tahan & geser untuk atur urutan • Geser kiri untuk hapus',
+                                style: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontSize: 11,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close,
-                              color: Colors.white, size: 22),
-                          onPressed: () => Navigator.pop(bottomSheetCtx),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => Navigator.pop(bottomSheetCtx),
+                          child: const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Icon(Icons.close,
+                                color: Colors.white, size: 22),
+                          ),
                         ),
                       ],
                     ),
@@ -481,7 +526,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                                 height: 44,
                                                 fit: BoxFit.cover,
                                                 errorBuilder:
-                                                    (_, __, ___) =>
+                                                    (context, error, stackTrace) =>
                                                         Container(
                                                   width: 44,
                                                   height: 44,
