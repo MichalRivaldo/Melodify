@@ -93,4 +93,55 @@ class AuthService {
   static Future<void> logout() async {
     await removeToken();
   }
+
+  // Ambil profil user saat ini dari backend
+  static Future<Map<String, dynamic>?> getProfile() async {
+    try {
+      final token = await getToken();
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/me'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Update profil user ke backend
+  static Future<bool> updateProfile({
+    required String name,
+    required String username,
+    required String bio,
+    String? avatarUrl,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) return false;
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/auth/profile'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'name': name,
+          'username': username,
+          'bio': bio,
+          'profile_image': avatarUrl,
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
 }

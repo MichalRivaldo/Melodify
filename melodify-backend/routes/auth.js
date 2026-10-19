@@ -83,4 +83,55 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// =====================
+// GET /api/auth/me (protected)
+// =====================
+const authMiddleware = require('../middleware/auth');
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name, username, email, bio, profile_image, created_at FROM users WHERE id = $1',
+      [req.user.id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error get profile:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// =====================
+// PUT /api/auth/profile (protected)
+// =====================
+router.put('/profile', authMiddleware, async (req, res) => {
+  const { name, username, bio, profile_image } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE users 
+       SET name = COALESCE($1, name),
+           username = COALESCE($2, username),
+           bio = COALESCE($3, bio),
+           profile_image = COALESCE($4, profile_image)
+       WHERE id = $5
+       RETURNING id, name, username, email, bio, profile_image`,
+      [name, username, bio, profile_image, req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User tidak ditemukan' });
+    }
+
+    res.json({
+      message: 'Profil berhasil diperbarui',
+      user: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Error update profile:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

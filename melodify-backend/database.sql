@@ -7,17 +7,19 @@ CREATE DATABASE melodify_db;
 \c melodify_db;
 
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
+  username VARCHAR(100),
   email VARCHAR(150) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
+  bio TEXT DEFAULT '',
   profile_image VARCHAR(255) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Artists table
-CREATE TABLE artists (
+CREATE TABLE IF NOT EXISTS artists (
   id SERIAL PRIMARY KEY,
   name VARCHAR(150) NOT NULL,
   bio TEXT,
@@ -26,7 +28,7 @@ CREATE TABLE artists (
 );
 
 -- Albums table
-CREATE TABLE albums (
+CREATE TABLE IF NOT EXISTS albums (
   id SERIAL PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
   artist_id INT REFERENCES artists(id) ON DELETE CASCADE,
@@ -36,7 +38,7 @@ CREATE TABLE albums (
 );
 
 -- Songs table
-CREATE TABLE songs (
+CREATE TABLE IF NOT EXISTS songs (
   id SERIAL PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
   artist_id INT REFERENCES artists(id) ON DELETE SET NULL,
@@ -49,7 +51,7 @@ CREATE TABLE songs (
 );
 
 -- Playlists table
-CREATE TABLE playlists (
+CREATE TABLE IF NOT EXISTS playlists (
   id SERIAL PRIMARY KEY,
   user_id INT REFERENCES users(id) ON DELETE CASCADE,
   name VARCHAR(200) NOT NULL,
@@ -60,7 +62,7 @@ CREATE TABLE playlists (
 );
 
 -- Playlist songs (many-to-many)
-CREATE TABLE playlist_songs (
+CREATE TABLE IF NOT EXISTS playlist_songs (
   id SERIAL PRIMARY KEY,
   playlist_id INT REFERENCES playlists(id) ON DELETE CASCADE,
   song_id INT REFERENCES songs(id) ON DELETE CASCADE,
@@ -69,7 +71,7 @@ CREATE TABLE playlist_songs (
 );
 
 -- Liked songs table
-CREATE TABLE liked_songs (
+CREATE TABLE IF NOT EXISTS liked_songs (
   id SERIAL PRIMARY KEY,
   user_id INT REFERENCES users(id) ON DELETE CASCADE,
   song_id INT REFERENCES songs(id) ON DELETE CASCADE,

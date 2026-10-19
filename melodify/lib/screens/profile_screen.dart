@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/profile_data.dart';
 import 'edit_profile_screen.dart';
 
+import '../services/auth_service.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -11,18 +13,45 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const Color green = Color(0xFF1DB954);
   static const Color muted = Color(0xFFB3B3B3);
   static const Color background = Color(0xFF121212);
 
-  // Data contoh untuk tampilan profil.
-  // Nanti bisa dihubungkan ke AuthProvider.
+  // Data default untuk profil pengguna
   ProfileData profile = const ProfileData(
-    name: 'Audi Pratiwi',
-    username: 'audi',
-    email: 'audi@example.com',
-    bio: 'music is my safe place ♡',
+    name: 'Pengguna Melodify',
+    username: 'melodify_user',
+    email: 'user@example.com',
+    bio: 'Music is my safe place ♡',
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileFromBackend();
+  }
+
+  Future<void> _loadProfileFromBackend() async {
+    final data = await AuthService.getProfile();
+    if (data != null && mounted) {
+      setState(() {
+        profile = ProfileData(
+          name: (data['name'] != null && data['name'].toString().isNotEmpty)
+              ? data['name'].toString()
+              : profile.name,
+          username: (data['username'] != null && data['username'].toString().isNotEmpty)
+              ? data['username'].toString()
+              : profile.username,
+          email: (data['email'] != null && data['email'].toString().isNotEmpty)
+              ? data['email'].toString()
+              : profile.email,
+          bio: (data['bio'] != null && data['bio'].toString().isNotEmpty)
+              ? data['bio'].toString()
+              : profile.bio,
+          avatarUrl: data['profile_image']?.toString() ?? profile.avatarUrl,
+        );
+      });
+    }
+  }
 
   final List<Map<String, Object>> playlists = [
     {
@@ -57,9 +86,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       profile = result;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile berhasil diperbarui!')),
+    final success = await AuthService.updateProfile(
+      name: result.name,
+      username: result.username,
+      bio: result.bio,
+      avatarUrl: result.avatarUrl,
     );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Profile berhasil diperbarui!'
+                : 'Profil disimpan lokal (periksa koneksi backend)',
+          ),
+        ),
+      );
+    }
   }
 
   @override

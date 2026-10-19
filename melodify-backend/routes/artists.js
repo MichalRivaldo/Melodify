@@ -18,6 +18,25 @@ router.get('/', async (req, res) => {
 });
 
 // =====================
+// GET /api/artists/albums/all
+// Ambil semua album (letakkan sebelum /:id)
+// =====================
+router.get('/albums/all', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT al.*, a.name AS artist_name 
+      FROM albums al 
+      LEFT JOIN artists a ON al.artist_id = a.id 
+      ORDER BY al.release_year DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error get albums:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// =====================
 // GET /api/artists/:id
 // Detail artist + daftar lagunya
 // =====================
@@ -43,25 +62,6 @@ router.get('/:id', async (req, res) => {
     res.json(artist);
   } catch (err) {
     console.error('Error get artist detail:', err.message);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// =====================
-// GET /api/albums
-// Ambil semua album
-// =====================
-router.get('/albums/all', async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT al.*, a.name AS artist_name 
-      FROM albums al 
-      LEFT JOIN artists a ON al.artist_id = a.id 
-      ORDER BY al.release_year DESC
-    `);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error get albums:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

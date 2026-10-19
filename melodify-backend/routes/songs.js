@@ -39,6 +39,35 @@ router.get('/', async (req, res) => {
 });
 
 // =====================
+// POST /api/songs
+// Menambahkan lagu baru ke database
+// =====================
+router.post('/', async (req, res) => {
+  const { title, artist_id, album_id, duration, audio_url, cover_url } = req.body;
+
+  if (!title || !audio_url) {
+    return res.status(400).json({ message: 'Judul (title) dan URL audio (audio_url) wajib diisi' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO songs (title, artist_id, album_id, duration, audio_url, cover_url)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [title, artist_id || null, album_id || null, duration || 0, audio_url, cover_url || null]
+    );
+
+    res.status(201).json({
+      message: 'Lagu berhasil ditambahkan',
+      song: formatSong(result.rows[0], req),
+    });
+  } catch (err) {
+    console.error('Error add song:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// =====================
 // GET /api/songs/search?q=keyword
 // Cari lagu berdasarkan judul atau nama artist
 // =====================
